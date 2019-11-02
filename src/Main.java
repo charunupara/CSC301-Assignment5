@@ -11,16 +11,16 @@ public class Main {
         /**
          * Initial seed for LFSR(), parsed from user input in the form of a command line argument
          */
-        int seed = Integer.parseInt(args[0]);
+      //  int seed = Integer.parseInt(args[0]);
 
         /**
          * Array of nums initialized to 0 that will be used to create red-black tree (will be passed to LFSR() to fill value)
          */
-        int[] nums = new int[10];
+        //int[] nums = new int[10];
 
 
         //Generate 10 random numbers using LFRS which will be stored in the previously create array (nums)
-        LFSR(seed, nums);
+      //  LFSR(seed, nums);
 
         /**
          * Steps from here
@@ -34,8 +34,14 @@ public class Main {
          *
          */
 
+        RBT tree = new RBT(new TreeNode(2));
+        insertRBT(tree, 3);
+        insertRBT(tree, 1);
+        insertRBT(tree, 5);
+        levelOrderPrint(tree.root);
 
-        System.out.println("Test");
+
+
     }
 
     /**
@@ -110,8 +116,23 @@ public class Main {
      * @param node the node to be right-rotated
      */
     public static void rightRotate(RBT tree, TreeNode node) {
-        //TODO
-
+        TreeNode y = node.left;
+        node.left = y.right;
+        if(y.right != tree.NIL) {
+            y.right.parent = node;
+        }
+        y.parent = node.parent;
+        if(node.parent == tree.NIL) {
+            tree.root = y;
+        }
+        else if (node == node.parent.right) {
+            node.parent.right = y;
+        }
+        else {
+            node.parent.left = y;
+        }
+        y.right = node;
+        node.parent = y;
 
     }
 
@@ -122,32 +143,58 @@ public class Main {
      * @param node the node that is insserted into the tree
      */
     public static void insertRBTFixUp(RBT tree, TreeNode node) {
-        //TODO
+        //Case I: tree has one element
+        if(tree.size == 1) {
+            tree.root.color = 'b';
+        }
+
         while(node.parent.color == 'r') {
-            //Uncle is the left child of grandparent of node
+            //Uncle is the right child of grandparent of node
             if(node.parent == node.parent.parent.left) {
 
-                //Case I: tree has one element
-                if(tree.size == 1) {
-                    tree.root.color = 'b';
-                }
+                TreeNode uncle = node.parent.parent.right;
 
                 //Case II: Both node and node.parent color are red
-                //We look at the uncle of the node
-                if(node.color == 'r' && node.parent.color == 'r') {
-                    //Look at uncle
-                    //If uncle.color = 'r'
-                    //  newNode.parent.color = 'b'
-                    //  newNode.uncle.color = 'b'
+                if(uncle.color == 'r') {
+                    node.parent.color ='b';
+                    node.parent.parent.left.color = 'b';
+                    node.parent.parent.color = 'r';
+                    node = node.parent.parent;
                 }
+                else if(node == node.parent.right) {
+                    node = node.parent;
+                    leftRotate(tree, node);
+
+                }
+                node.parent.color = 'b';
+                node.parent.parent.color = 'r';
+                rightRotate(tree, node.parent.parent);
             }
 
-            //Uncle is the right child of the grandparent of node
+            //Uncle is the left child of the grandparent of node
             else {
+                TreeNode uncle = node.parent.parent.left;
+
+                //Case II: Both node and node.parent color are red
+                if(uncle.color == 'r') {
+                    node.parent.color ='b';
+                    node.parent.parent.right.color = 'b';
+                    node.parent.parent.color = 'r';
+                    node = node.parent.parent;
+                }
+                else if(node == node.parent.left) {
+                    node = node.parent;
+                    rightRotate(tree, node);
+
+                }
+
+                node.parent.color = 'b';
+                node.parent.parent.color = 'r';
+                leftRotate(tree, node.parent.parent);
 
             }
-
         }
+        tree.root.color = 'b';
 
     }
     public static void transplantRBT(RBT tree) {
