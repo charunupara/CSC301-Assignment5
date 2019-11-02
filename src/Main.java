@@ -19,8 +19,23 @@ public class Main {
         //int[] nums = new int[10];
 
 
+        int seed = 221;
+
+        /**
+         * Array of nums initialized to 0 that will be used to create red-black tree (will be passed to LFSR() to fill value)
+         */
+        int[] nums = new int[10];
+
+
         //Generate 10 random numbers using LFRS which will be stored in the previously create array (nums)
-      //  LFSR(seed, nums);
+        LFSR(seed, nums);
+
+        /*
+        Testing LFRS by printing nums
+         */
+//        for(int j = 0; j < nums.length; j++){
+//            System.out.println(nums[j]);
+//        }
 
         /**
          * Steps from here
@@ -208,44 +223,35 @@ public class Main {
     }
 
 
-
     /**
      * Generate 10 random numbers to be used to create tree
-     * TODO Analyze complexity
      * @param seed the initial seed that is parsed from args
      * @param nums empty array of 10 integers that will be filled by this method and used to create the tree
      *
      */
     public static void LFSR(int seed, int[] nums) {
-        /*
-         * TODO
-         * What we need to do for this method
-         *  * Convert seed (decimal) to binary
-         *  * Get 0th, 2nd, 3rd, and 5th bits (store in array?)
-         *  * Find the following: (5th XOR (3rd XOR (2nd XOR 0th)))
-         *  * Create new binary string
-         *      * Shift bit of seed (binary) to the right by one position
-         *      * Change first (most significant) bit to the result of (5th XOR (3rd XOR (2nd XOR 0th)))
-         *  * Covert new binary to decimal, and that is the randomly generated number
-         */
+        nums[0] = seed;
+        String binaryInput = String.format("%8s", Integer.toBinaryString(seed));
+        binaryInput = binaryInput.replace(' ', '0');
 
-        /**
-         * Binary version of seed
-         */
-        String binaryInput = Integer.toBinaryString(seed);
+        for (int i = 1; i < nums.length; i++) {
+            //Get the appropriate bits to calculate the new bit
+            int[] binaryDigits = new int[4];
+            binaryDigits[0] = (int) binaryInput.charAt(2) - '0';
+            binaryDigits[1] = (int) binaryInput.charAt(4) - '0';
+            binaryDigits[2] = (int) binaryInput.charAt(5) - '0';
+            binaryDigits[3] = (int) binaryInput.charAt(7) - '0';
 
-        //Get the appropriate bits to calculate the new bit
-        int[] binaryDigits = new int[4];
-        binaryDigits[0] = (int)(binaryInput.charAt(2) - '0');
-        binaryDigits[1] = (int)(binaryInput.charAt(4) - '0');
-        binaryDigits[2] = (int)(binaryInput.charAt(5) - '0');
-        binaryDigits[3] = (int)(binaryInput.charAt(7) - '0');
+            int newBit = (binaryDigits[0] ^ ((binaryDigits[1] ^ (binaryDigits[2] ^ binaryDigits[3]))));
 
-        int newBit = (binaryDigits[0] ^ ((binaryDigits[1] ^ (binaryDigits[5] ^ binaryDigits[7]))));
-
-
-
+            String shiftedBinary = binaryInput.substring(0, binaryInput.length() - 1);
+            String newBinary = newBit + shiftedBinary;
+            int newInt = Integer.parseInt(newBinary, 2);
+            nums[i] = newInt;
+            binaryInput = newBinary;
+        }
     }
+
 
     /**
      *
