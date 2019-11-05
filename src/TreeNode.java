@@ -3,7 +3,7 @@ public class TreeNode {
     /**
      * The value or key of the node
      */
-    int val;
+    Integer val;
 
     /**
      * The left child of the node
@@ -25,10 +25,17 @@ public class TreeNode {
      */
     char color;
 
+    public TreeNode() {
+        this.val = null;
+    }
+
     public TreeNode(int val) {
         this.val = val;
         this.left = null;
         this.right = null;
-        this.color = 'b';
+        this.parent = null;
+        this.color = 'r';
     }
+
+
 }

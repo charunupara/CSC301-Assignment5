@@ -4,10 +4,13 @@
  * @version 1.0
  */
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         /**
          * Initial seed for LFSR(), parsed from user input in the form of a command line argument
          */
@@ -24,36 +27,50 @@ public class Main {
         /**
          * Array of nums initialized to 0 that will be used to create red-black tree (will be passed to LFSR() to fill value)
          */
-        int[] nums = new int[10];
-
+        ArrayList<Integer> nums = new ArrayList<Integer>(10);
+        ArrayList<Integer> allVals = new ArrayList<>();
 
         //Generate 10 random numbers using LFRS which will be stored in the previously create array (nums)
         LFSR(seed, nums);
 
-        /*
-        Testing LFRS by printing nums
-         */
-//        for(int j = 0; j < nums.length; j++){
-//            System.out.println(nums[j]);
-//        }
+        RBT tree = new RBT();
 
-        /**
-         * Steps from here
-         *  * Create new root node
-         *      * root.val = nums[0]
-         *      * root.left = null
-         *      * root.right = null
-         *      * root.color = 'b'
-         *  * Loop through the rest of nums and insert each node
-         *  * Print the tree by using level-order traversal (queue)
-         *
-         */
 
-        RBT tree = new RBT(new TreeNode(2));
-        insertRBT(tree, 3);
-        insertRBT(tree, 1);
-        insertRBT(tree, 5);
+
+
+        for(int i = 0; i < 10; i++) {
+            insertRBT(tree, nums.get(i), allVals);
+        }
+
+
         levelOrderPrint(tree.root);
+
+        boolean control = true;
+
+        while(control) {
+            Scanner scanner = new Scanner(System.in);
+            String input = scanner.nextLine();
+
+            String[] inputArr = new String[10];
+            inputArr = input.split(" ");
+            if(inputArr[0].equals("ADD")) {
+                insertRBT(tree, Integer.parseInt(inputArr[1]), nums);
+                levelOrderPrint(tree.root);
+            }
+            else if(inputArr[0].equals("DEL")) {
+                deleteRBT(tree, Integer.parseInt(inputArr[1]));
+                levelOrderPrint(tree.root);
+            }
+            else if (inputArr[0].equals("BLKH")) {
+                System.out.println(getBlackHeight(tree,Integer.parseInt(inputArr[1])));
+            }
+            else if(inputArr[0].equals("Quit")) {
+                control = false;
+            }
+            else {
+                System.out.println("Invalid Command");
+            }
+        }
 
 
 
@@ -64,9 +81,13 @@ public class Main {
      * @param tree the tree that the new node will be inserted into
      * @param val value of the node to be inserted into the tree
      */
-    public static void insertRBT(RBT tree, int val) {
+    public static void insertRBT(RBT tree, int val, List<Integer> nums) throws Exception {
+        if(nums.contains(val)) {
+            throw new Exception("Duplicate value");
+        }
+
         TreeNode newNode = new TreeNode(val);
-        //This step almost resembles the insertion method for regular binary search trees
+
         TreeNode y = tree.NIL;
         TreeNode x = tree.root;
         while(x != tree.NIL) {
@@ -92,8 +113,9 @@ public class Main {
         newNode.left = tree.NIL;
         newNode.right = tree.NIL;
         newNode.color = 'r';
-        ++tree.size;
         insertRBTFixUp(tree, newNode);
+        nums.add(nums.size(), val);
+
     }
 
     /**
@@ -163,27 +185,29 @@ public class Main {
             tree.root.color = 'b';
         }
 
-        while(node.parent.color == 'r') {
+        while(node.parent != tree.NIL && node.parent.color == 'r') {
             //Uncle is the right child of grandparent of node
             if(node.parent == node.parent.parent.left) {
-
                 TreeNode uncle = node.parent.parent.right;
 
                 //Case II: Both node and node.parent color are red
                 if(uncle.color == 'r') {
                     node.parent.color ='b';
-                    node.parent.parent.left.color = 'b';
+                    node.parent.parent.right.color = 'b';
                     node.parent.parent.color = 'r';
                     node = node.parent.parent;
                 }
-                else if(node == node.parent.right) {
-                    node = node.parent;
-                    leftRotate(tree, node);
-
+                else {
+                    if(node == node.parent.right) {
+                        node = node.parent;
+                        leftRotate(tree, node);
+                    }
+                    else {
+                        node.parent.color = 'b';
+                        node.parent.parent.color = 'r';
+                        rightRotate(tree, node.parent.parent);
+                    }
                 }
-                node.parent.color = 'b';
-                node.parent.parent.color = 'r';
-                rightRotate(tree, node.parent.parent);
             }
 
             //Uncle is the left child of the grandparent of node
@@ -193,35 +217,191 @@ public class Main {
                 //Case II: Both node and node.parent color are red
                 if(uncle.color == 'r') {
                     node.parent.color ='b';
-                    node.parent.parent.right.color = 'b';
+                    node.parent.parent.left.color = 'b';
                     node.parent.parent.color = 'r';
                     node = node.parent.parent;
                 }
-                else if(node == node.parent.left) {
-                    node = node.parent;
-                    rightRotate(tree, node);
+                else {
+                    if(node == node.parent.left) {
+                        node = node.parent;
+                        rightRotate(tree, node);
+                    }
+                    else {
+                        node.parent.color = 'b';
+                        node.parent.parent.color = 'r';
+                        leftRotate(tree, node.parent.parent);
+                    }
 
                 }
-
-                node.parent.color = 'b';
-                node.parent.parent.color = 'r';
-                leftRotate(tree, node.parent.parent);
-
             }
         }
         tree.root.color = 'b';
 
     }
-    public static void transplantRBT(RBT tree) {
-        //TODO
+    public static void transplantRBT(RBT tree, TreeNode u, TreeNode v) {
+        if(u.parent == tree.NIL) {
+            tree.root = v;
+        }
+        else if (u == u.parent.left) {
+            u.parent.left = v;
+        }
+        else {
+            u.parent.right = v;
+        }
+
+        v.parent = u.parent;
     }
-    public static void deleteRBT(RBT tree, TreeNode node) {
-        //TODO
+    public static TreeNode search(RBT tree, TreeNode root, int val) throws Exception {
+
+        while(root != tree.NIL) {
+            if (val > root.val) {
+                root = root.right;
+            }
+            else if (val < root.val) {
+                root = root.left;
+            }
+            else {
+                return root;
+            }
+        }
+        throw new Exception("Node not in tree");
     }
-    public static void deleteRBTFixUp(RBT tree, TreeNode node) {
-        //TODO
+    public static void deleteRBT(RBT tree, int val) throws Exception {
+        TreeNode z;
+
+        z = search(tree, tree.root, val);
+
+        TreeNode y = z;
+        char yOGColor = y.color;
+        TreeNode x;
+
+        if(z.left == tree.NIL) {
+            x = z.right;
+            transplantRBT(tree, z, z.right);
+        }
+        else if(z.right == tree.NIL) {
+            x = z.left;
+            transplantRBT(tree, z, z.left);
+        }
+        else {
+            y = treeMinimum(z.right);
+            yOGColor = y.color;
+            x = y.right;
+
+            if(y.parent == z) {
+                x.parent = y;
+            }
+            else {
+                transplantRBT(tree, y, y.right);
+                y.right = z.right;
+                y.right.parent = y;
+            }
+            transplantRBT(tree, z, y);
+            y.left = z.left;
+            y.left.parent = y;
+            y.color = z.color;
+        }
+        if(yOGColor == 'b') {
+            deleteRBTFixUp(tree, x);
+        }
     }
 
+    public static TreeNode treeMinimum(TreeNode node) {
+        while(node.left != null) {
+            node = node.left;
+        }
+        return node;
+    }
+    public static void deleteRBTFixUp(RBT tree, TreeNode x) {
+        while(x != tree.root && x.color == 'b') {
+            if(x == x.parent.left) {
+                TreeNode w = x.parent.right;
+                if(w.color == 'r') {
+                    w.color = 'b';
+                    x.parent.color ='r';
+                    leftRotate(tree, x.parent);
+                    w = x.parent.right;
+                }
+                if(w.left.color == 'b' && w.right.color == 'b') {
+                    w.color = 'r';
+                    x = x.parent;
+                }
+                else {
+                    if (w.right.color == 'b') {
+                        w.left.color = 'b';
+                        w.color = 'r';
+                        rightRotate(tree, w);
+                        w = x.parent.right;
+                    }
+                    w.color = x.parent.color;
+                    x.parent.color = 'b';
+                    w.right.color = 'b';
+                    leftRotate(tree, x.parent);
+                    x = tree.root;
+                }
+            }
+            else {
+                TreeNode w = x.parent.left;
+                if(w.color == 'r') {
+                    w.color = 'b';
+                    x.parent.color ='r';
+                    rightRotate(tree, x.parent);
+                    w = x.parent.left;
+                }
+                if(w.right.color == 'b' && w.left.color == 'b') {
+                    w.color = 'r';
+                    x = x.parent;
+                }
+                else {
+                    if (w.left.color == 'b') {
+                        w.right.color = 'b';
+                        w.color = 'r';
+                        leftRotate(tree, w);
+                        w = x.parent.left;
+                    }
+                    w.color = x.parent.color;
+                    x.parent.color = 'b';
+                    w.left.color = 'b';
+                    rightRotate(tree, x.parent);
+                    x = tree.root;
+                }
+            }
+        }
+        x.color = 'b';
+    }
+
+    public static int getBlackHeight(RBT tree, int val) throws Exception {
+        TreeNode node = search(tree, tree.root, val);
+        return bhHelper(tree, node);
+
+    }
+
+    public static int bhHelper(RBT tree, TreeNode node) throws Exception {
+        if(node == tree.NIL) {
+            return 1;
+        }
+        int leftHeight = bhHelper(tree, node.left);
+
+        if(leftHeight == 0) {
+            return leftHeight;
+        }
+        int rightHeight = bhHelper(tree, node.right);
+        if(rightHeight == 0) {
+            return rightHeight;
+        }
+        if(leftHeight != rightHeight) {
+            return 0;
+        }
+        else {
+            if(node.color == 'b') {
+                return leftHeight + 1;
+            }
+            else {
+                return leftHeight;
+            }
+
+        }
+    }
 
     /**
      * Generate 10 random numbers to be used to create tree
@@ -229,12 +409,12 @@ public class Main {
      * @param nums empty array of 10 integers that will be filled by this method and used to create the tree
      *
      */
-    public static void LFSR(int seed, int[] nums) {
-        nums[0] = seed;
+    public static void LFSR(int seed, List<Integer> nums) {
+        nums.add(0, seed);
         String binaryInput = String.format("%8s", Integer.toBinaryString(seed));
         binaryInput = binaryInput.replace(' ', '0');
 
-        for (int i = 1; i < nums.length; i++) {
+        for (int i = 1; i < 10; i++) {
             //Get the appropriate bits to calculate the new bit
             int[] binaryDigits = new int[4];
             binaryDigits[0] = (int) binaryInput.charAt(2) - '0';
@@ -247,27 +427,11 @@ public class Main {
             String shiftedBinary = binaryInput.substring(0, binaryInput.length() - 1);
             String newBinary = newBit + shiftedBinary;
             int newInt = Integer.parseInt(newBinary, 2);
-            nums[i] = newInt;
+            nums.add(i, newInt);
             binaryInput = newBinary;
         }
     }
 
-
-    /**
-     *
-     * @param seed binary version of the seed
-     * @param nums array to store the randomly generated number
-     * @return
-     */
-    public static int LFSRHelper(String seed, int nums) {
-        /*
-         * TODO
-         *
-         *
-         */
-
-        return 0;
-    }
 
     /**
      * Print a red-black tree level-by-level
@@ -290,7 +454,10 @@ public class Main {
          */
         while(!queue.isEmpty()) {
             TreeNode temp = queue.poll();
-            System.out.println(temp.val);
+
+            if(temp.val != null) {
+                System.out.println("(" + temp.val + ", " + temp.color + ")");
+            }
 
             if(temp.left != null) {
                 queue.add(temp.left);
