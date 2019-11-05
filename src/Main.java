@@ -11,33 +11,29 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        /**
-         * Initial seed for LFSR(), parsed from user input in the form of a command line argument
-         */
-      //  int seed = Integer.parseInt(args[0]);
 
         /**
-         * Array of nums initialized to 0 that will be used to create red-black tree (will be passed to LFSR() to fill value)
+         * Initial seed for LFSR()
          */
-        //int[] nums = new int[10];
-
-
         int seed = 221;
 
         /**
-         * Array of nums initialized to 0 that will be used to create red-black tree (will be passed to LFSR() to fill value)
+         * List of integer that will be used to create red-black tree (will be passed to LFSR() to fill value)
          */
         ArrayList<Integer> nums = new ArrayList<Integer>(10);
+
+        /**
+         * A list to keep track of new values being added to the tree
+         */
         ArrayList<Integer> allVals = new ArrayList<>();
 
         //Generate 10 random numbers using LFRS which will be stored in the previously create array (nums)
         LFSR(seed, nums);
 
+        //Initialize tree
         RBT tree = new RBT();
 
-
-
-
+        //Populate tree with values generate by LFSR()
         for(int i = 0; i < 10; i++) {
             insertRBT(tree, nums.get(i), allVals);
         }
@@ -45,8 +41,8 @@ public class Main {
 
         levelOrderPrint(tree.root);
 
+        //User control
         boolean control = true;
-
         while(control) {
             Scanner scanner = new Scanner(System.in);
             String input = scanner.nextLine();
@@ -80,6 +76,7 @@ public class Main {
      * Insert a new node where node.val = val into red-black tree
      * @param tree the tree that the new node will be inserted into
      * @param val value of the node to be inserted into the tree
+     * @param nums list of integers
      */
     public static void insertRBT(RBT tree, int val, List<Integer> nums) throws Exception {
         if(nums.contains(val)) {
@@ -238,6 +235,13 @@ public class Main {
         tree.root.color = 'b';
 
     }
+
+    /**
+     *
+     * @param tree
+     * @param u
+     * @param v
+     */
     public static void transplantRBT(RBT tree, TreeNode u, TreeNode v) {
         if(u.parent == tree.NIL) {
             tree.root = v;
@@ -251,6 +255,15 @@ public class Main {
 
         v.parent = u.parent;
     }
+
+    /**
+     *
+     * @param tree
+     * @param root
+     * @param val
+     * @return
+     * @throws Exception
+     */
     public static TreeNode search(RBT tree, TreeNode root, int val) throws Exception {
 
         while(root != tree.NIL) {
@@ -266,6 +279,13 @@ public class Main {
         }
         throw new Exception("Node not in tree");
     }
+
+    /**
+     *
+     * @param tree
+     * @param val
+     * @throws Exception
+     */
     public static void deleteRBT(RBT tree, int val) throws Exception {
         TreeNode z;
 
@@ -306,12 +326,23 @@ public class Main {
         }
     }
 
+    /**
+     *
+     * @param node
+     * @return
+     */
     public static TreeNode treeMinimum(TreeNode node) {
         while(node.left != null) {
             node = node.left;
         }
         return node;
     }
+
+    /**
+     *
+     * @param tree
+     * @param x
+     */
     public static void deleteRBTFixUp(RBT tree, TreeNode x) {
         while(x != tree.root && x.color == 'b') {
             if(x == x.parent.left) {
@@ -370,12 +401,26 @@ public class Main {
         x.color = 'b';
     }
 
+    /**
+     *
+     * @param tree
+     * @param val
+     * @return
+     * @throws Exception
+     */
     public static int getBlackHeight(RBT tree, int val) throws Exception {
         TreeNode node = search(tree, tree.root, val);
         return bhHelper(tree, node);
 
     }
 
+    /**
+     *
+     * @param tree
+     * @param node
+     * @return
+     * @throws Exception
+     */
     public static int bhHelper(RBT tree, TreeNode node) throws Exception {
         if(node == tree.NIL) {
             return 1;
